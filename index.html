@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moja Kamera</title>
+    <style>
+        body { font-family: sans-serif; display: grid; place-items: center; min-height: 90vh; }
+        video {
+            border: 2px solid black;
+            width: 90%;
+            max-width: 600px;
+            background: #222;
+        }
+    </style>
+</head>
+<body>
+    <h1>Podgląd z kamery</h1>
+    <video id="webcam" autoplay playsinline></video>
+    <script src="app.js"></script>
+</body>
+</html>
