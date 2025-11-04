@@ -15,10 +15,15 @@
 <pre id="pos">Pobieranie...</pre>
 <video id="camera" autoplay playsinline></video>
 <button id="vibrateButton">Zawibruj</button>
+<button id="nfcButton">Skanuj NFC</button>
+<br>
+<pre id="nfc">Oczekiwanie na skanowanie NFC...</pre>
 
 <script>
 const el = document.getElementById('pos');
 const video = document.getElementById('camera');
+const nfcButton = document.getElementById('nfcButton');
+const nfcEl = document.getElementById('nfc');
 let lat,lon,acc,heading,beta,gamma;
 
 function pokaz(){
@@ -52,7 +57,41 @@ window.DeviceOrientationEvent && window.addEventListener("deviceorientation",e=>
 document.getElementById('vibrateButton').onclick=()=>{
   navigator.vibrate?.(500);
 };
+
+if ('nfc' in navigator) {
+  nfcButton.onclick = async () => {
+    nfcEl.textContent = "Zbliż tag NFC do telefonu...";
+    try {
+      const reader = new NDEFReader();
+      await reader.scan();
+
+      reader.addEventListener("readingerror", () => {
+        nfcEl.textContent = "Błąd odczytu tagu NFC.";
+      });
+
+      reader.addEventListener("reading", ({ message, serialNumber }) => {
+        nfcEl.textContent = `Odczytano tag!\nS/N: ${serialNumber || 'brak'}\n---\n`;
+
+        for (const record of message.records) {
+          nfcEl.textContent += `Typ rekordu: ${record.recordType}\n`;
+
+          if (record.recordType === "text") {
+            const textDecoder = new TextDecoder(record.encoding);
+            nfcEl.textContent += `Tekst: ${textDecoder.decode(record.data)}\n`;
+          } else {
+            nfcEl.textContent += `(Nie można odkodować danych typu ${record.recordType})\n`;
+          }
+        }
+      });
+    } catch (error) {
+      nfcEl.textContent = "Błąd NFC: " + error.message;
+    }
+  };
+} else {
+  nfcEl.textContent = "Web NFC nie jest wspierane na tym urządzeniu lub w tej przeglądarce. Spróbuj w Chrome na Androidzie.";
+  nfcButton.disabled = true;
+}
 </script>
 
 </body>
-</html>
+</html> 
