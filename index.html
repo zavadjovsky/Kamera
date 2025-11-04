@@ -1,13 +1,58 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moja Kamera</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pozycja + kamera</title>
+<style>
+  body{font-family:sans-serif;}
+  video{width:100%;max-width:400px;background:#000;border:2px solid #333;border-radius:8px;margin:10px 0;}
+  pre{background:#eee;padding:10px;border-radius:6px;display:inline-block;}
+</style>
 </head>
 <body>
-    <h1>Podgląd z kamery</h1>
-    <video id="webcam" autoplay playsinline></video>
-    <script src="app.js"></script>
+
+<pre id="pos">Pobieranie...</pre>
+<video id="camera" autoplay playsinline></video>
+<button id="vibrateButton">Zawibruj</button>
+
+<script>
+const el = document.getElementById('pos');
+const video = document.getElementById('camera');
+let lat,lon,acc,heading,beta,gamma;
+
+function pokaz(){
+  el.textContent =
+    (lat?`Lat: ${lat}\nLon: ${lon}\nDokł: ${Math.round(acc)}m\n`:'')+
+    (heading!=null?`Kierunek: ${Math.round(heading)}°\n`:'')+
+    (beta!=null?`Beta: ${Math.round(beta)}°\n`:'')+
+    (gamma!=null?`Gamma: ${Math.round(gamma)}°\n`:'');
+}
+
+navigator.geolocation?.watchPosition(
+  p=>{lat=p.coords.latitude.toFixed(6);lon=p.coords.longitude.toFixed(6);acc=p.coords.accuracy;pokaz();},
+  e=>el.textContent="GPS err: "+e.message,
+  {enableHighAccuracy:true}
+);
+
+window.DeviceOrientationEvent && window.addEventListener("deviceorientation",e=>{
+  if(e.alpha!=null)heading=360-e.alpha;
+  if(e.beta!=null)beta=e.beta;
+  if(e.gamma!=null)gamma=e.gamma;
+  pokaz();
+});
+
+(async()=>{
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});
+    video.srcObject=stream;
+  }catch(e){el.textContent+="\nCam err";}
+})();
+
+document.getElementById('vibrateButton').onclick=()=>{
+  navigator.vibrate?.(500);
+};
+</script>
+
 </body>
 </html>
